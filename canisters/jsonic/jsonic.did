@@ -1,0 +1,70 @@
+type TokenIdentifier = text;
+type AccountIdentifier = text;
+type Balance = nat;
+
+type User = variant {
+    address: text;
+    "principal": principal;
+};
+
+type TransferRequest = record {
+    from: User;
+    to: User;
+    token: TokenIdentifier;
+    amount: Balance;
+    memo: blob;
+    notify: bool;
+};
+
+type TransferResponse = variant {
+    ok: Balance;
+    err: variant {
+        Unauthorized: AccountIdentifier;
+        InsufficientBalance: null;
+        Rejected: null;
+        InvalidToken: TokenIdentifier;
+        CannotNotify: AccountIdentifier;
+        Other: text;
+    };
+};
+
+type BalanceRequest = record {
+    user: User;
+    token: TokenIdentifier;
+};
+
+type BalanceResponse = variant {
+    ok: Balance;
+};
+
+type MetadataResponse = variant {
+    ok: Metadata;
+    err: CommonError;
+};
+
+type CommonError = variant {
+    InvalidToken: TokenIdentifier;
+    Other: text;
+};
+
+type Extensions = vec text;
+
+type Metadata = variant {
+    fungible: record {
+        name: text;
+        symbol: text;
+        decimals: nat8;
+        metadata: opt blob;
+    };
+    nonfungible: record {
+        metadata: opt blob;
+    };
+};
+
+service : {
+    "init": () -> (bool);
+    "transfer": (TransferRequest) -> (TransferResponse);
+    "balance": (BalanceRequest) -> (BalanceResponse) query;
+    "metadata": (TokenIdentifier) -> (MetadataResponse) query;
+    "extensions": () -> (Extensions) query;
+}

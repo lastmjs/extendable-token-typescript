@@ -1,0 +1,12 @@
+{
+    "canisters": {
+        "jsonic": {
+            "type": "custom",
+            "build": "azle jsonic",
+            "root": "canisters/jsonic",
+            "js": "canisters/jsonic/jsonic.ts",
+            "candid": "canisters/jsonic/jsonic.did",
+            "wasm": "target/wasm32-unknown-unknown/release/jsonic-optimized.wasm"
+        }
+    }
+}
