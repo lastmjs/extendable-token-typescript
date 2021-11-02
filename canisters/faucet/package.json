@@ -1,0 +1,19 @@
+{
+  "name": "faucet",
+  "version": "0.0.0",
+  "description": "",
+  "scripts": {
+    "build": "snowpack build --polyfill-node"
+  },
+  "keywords": [],
+  "author": "Jordan Last <jordan.michael.last@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "ic-stoic-identity": "2.0.0",
+    "lit-html": "2.0.1",
+    "reduxular": "0.0.6"
+  },
+  "devDependencies": {
+    "snowpack": "3.8.8"
+  }
+}

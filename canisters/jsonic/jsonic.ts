@@ -1,25 +1,17 @@
-// TODO this file is based on https://github.com/Toniq-Labs/extendable-token which does not yet have a license
-
-// TODO we want to allow returning non-type-aliases from functions as well if possible
-// TODO allow for optional fields in types
+// this file is based on https://github.com/Toniq-Labs/extendable-token which does not yet have a license
 
 import {
-    Query,
-    Update,
-    Nat,
     Candid,
     Enum,
+    ICBlob,
+    Nat,
     Principal,
+    Query,
     Result,
-    u8,
-    ICBlob // TODO consider making this a Vec<u8> instead, just create a Vec and allow it to have a type parameter
+    Update,
+    u8
 } from 'azle';
 
-// TODO we probably want an init function
-
-declare var icPrint: any;
-
-// TODO create a type for the ic and allow it to be extended by the user
 declare var ic: {
     caller: Principal;
     memory: {
@@ -27,57 +19,17 @@ declare var ic: {
             [key: AccountIdentifier]: Balance | undefined;
         };
         extensions: Extension[];
+        initialized: boolean;
+        supply: Balance;
     };
 };
 
-type FungibleMetadata = Candid<{
-    name: string;
-    symbol: string;
-    decimals: u8;
-    metadata?: ICBlob
-}>;
+type Account = Candid<[AccountIdentifier, Balance]>;
+export type Accounts = Candid<Account[]>;
 
-type NonFungibleMetadata = Candid<{
-    metadata?: ICBlob
-}>;
-
-type Metadata = Candid<Enum<{
-    fungible?: FungibleMetadata;
-    nonfungible?: NonFungibleMetadata;
-}>>;
-
-type Extension = Candid<string>;
-type Extensions = Candid<Extension[]>;
 type AccountIdentifier = Candid<string>;
-type TokenIdentifier = Candid<string>;
+
 type Balance = Candid<Nat>;
-type Memo = Candid<ICBlob>;
-
-// TODO consider using the word variant instead of enum
-type User = Candid<Enum<{
-    address?: AccountIdentifier,
-    principal?: Principal
-}>>;
-
-type TransferRequest = Candid<{
-    from: User;
-    to: User;
-    token: TokenIdentifier;
-    amount: Balance;
-    memo: Memo;
-    notify: boolean;
-}>;
-
-type TransferResponseError = Candid<Enum<{
-    Unauthorized?: AccountIdentifier,
-    InsufficientBalance?: null,
-    Rejected?: null,
-    InvalidToken?: TokenIdentifier,
-    CannotNotify?: AccountIdentifier,
-    Other?: string
-}>>;
-
-type TransferResponse = Candid<Result<Balance, TransferResponseError>>;
 
 type BalanceRequest = Candid<{
     user: User;
@@ -91,22 +43,128 @@ type CommonError = Candid<Enum<{
     Other?: string;
 }>>;
 
+type Extension = Candid<string>;
+type Extensions = Candid<Extension[]>;
+
+type FungibleMetadata = Candid<{
+    name: string;
+    symbol: string;
+    decimals: u8;
+    metadata?: ICBlob
+}>;
+
+type Memo = Candid<ICBlob>;
+
+type Metadata = Candid<Enum<{
+    fungible?: FungibleMetadata;
+    nonfungible?: NonFungibleMetadata;
+}>>;
+
 type MetadataResponse = Candid<Result<Metadata, CommonError>>;
 
-// TODO we should get this to run automatically
+type NonFungibleMetadata = Candid<{
+    metadata?: ICBlob
+}>;
+
+export type SupplyResponse = Candid<Result<Balance, CommonError>>;
+
+type TokenIdentifier = Candid<string>;
+
+type TransferRequest = Candid<{
+    from: User;
+    to: User;
+    token: TokenIdentifier;
+    amount: Balance;
+    memo: Memo;
+    notify: boolean;
+}>;
+
+type TransferResponse = Candid<Result<Balance, TransferResponseError>>;
+
+type TransferResponseError = Candid<Enum<{
+    Unauthorized?: AccountIdentifier,
+    InsufficientBalance?: null,
+    Rejected?: null,
+    InvalidToken?: TokenIdentifier,
+    CannotNotify?: AccountIdentifier,
+    Other?: string
+}>>;
+
+type User = Candid<Enum<{
+    address?: AccountIdentifier,
+    principal?: Principal
+}>>;
+
 export function init(): Update<boolean> {
-    ic.memory.balances = {
-        'a3a0b065a2af75046f72ebd89f5506ae5e17260248681f2e7d6e83527efa1403': 100000000000
-    };
+    if (ic.memory.initialized === true) {
+        return false;
+    }
+
+    ic.memory.initialized = true;
+    ic.memory.balances = {};
+    ic.memory.supply = 0;
     ic.memory.extensions = ['@ext/common'];
 
     return true;
 }
 
-export function transfer(request: TransferRequest): Update<TransferResponse> {
-    // TODO do those crazy checks
-    // TODO implement notifications
+export function balance(request: BalanceRequest): Query<BalanceResponse> {
+    const aid = getUserAID(request.user);
 
+    const balance = ic.memory.balances[aid];
+
+    if (balance === undefined) {
+        return {
+            ok: 0
+        };
+    }
+
+    return {
+        ok: balance
+    };
+}
+
+export function claim(): Update<boolean> {
+    const callerAddress = addressFromPrincipal(ic.caller);
+
+    const balance = ic.memory.balances[callerAddress] ?? 0;
+
+    ic.memory.balances[callerAddress] = balance + 100000000;
+    
+    const supply = ic.memory.supply;
+
+    ic.memory.supply = supply + 100000000;
+
+    return true;
+}
+
+export function extensions(): Query<Extensions> {
+    return ic.memory.extensions;
+}
+
+export function metadata(token: TokenIdentifier): Query<MetadataResponse> {
+    return {
+        ok: {
+            fungible: {
+                name: 'JS on the IC',
+                symbol: 'JSONIC',
+                decimals: 8
+            }
+        }
+    };
+}
+
+export function registry(): Query<Accounts> {
+    return Object.entries(ic.memory.balances);
+}
+
+export function supply(token: TokenIdentifier): Query<SupplyResponse> {
+    return {
+        ok: ic.memory.supply
+    };
+}
+
+export function transfer(request: TransferRequest): Update<TransferResponse> {
     const sender = getUserAID(request.from);
     const spender = addressFromPrincipal(ic.caller);
     const receiver = getUserAID(request.to);
@@ -136,50 +194,14 @@ export function transfer(request: TransferRequest): Update<TransferResponse> {
 
     ic.memory.balances[sender] = newSenderBalance;
 
-    const receiverBalance = ic.memory.balances[receiver];
-    const newReceiverBalance = (receiverBalance ?? 0) + request.amount;
+    const receiverBalance = ic.memory.balances[receiver] ?? 0;
+    const newReceiverBalance = receiverBalance + request.amount;
 
     ic.memory.balances[receiver] = newReceiverBalance;
 
     return {
         ok: request.amount
     };
-}
-
-export function balance(request: BalanceRequest): Query<BalanceResponse> {
-    const aid = getUserAID(request.user);
-
-    const balance = ic.memory.balances[aid];
-
-    if (balance === undefined) {
-        return {
-            ok: 0
-        };
-    }
-
-    return {
-        ok: balance
-    };
-}
-
-export function metadata(token: TokenIdentifier): Query<MetadataResponse> {
-    return {
-        ok: {
-            fungible: {
-                name: 'JS on the IC',
-                symbol: 'JSONIC',
-                decimals: 8
-            }
-        }
-    };
-}
-
-export function extensions(): Query<Extensions> {
-    return ic.memory.extensions;
-}
-
-function getUserAID(user: User): string {
-    return user.address ?? addressFromPrincipal(user.principal);
 }
 
 function addressFromPrincipal(principal: Principal): AccountIdentifier {
@@ -194,6 +216,10 @@ function addressFromPrincipal(principal: Principal): AccountIdentifier {
     const crc = crc32(new Uint8Array(hash.match(/.{1,2}/g).map(x => parseInt(x, 16))));
     
     return crc + hash;
+}
+
+function getUserAID(user: User): AccountIdentifier {
+    return user.address ?? addressFromPrincipal(user.principal);
 }
 
 /* All below is third-party libraries included directly in this file because imports/modules are not yet working */

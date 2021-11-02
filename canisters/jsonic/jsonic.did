@@ -1,32 +1,9 @@
-type TokenIdentifier = text;
+type Account = record { AccountIdentifier; Balance; };
+type Accounts = vec Account;
+
 type AccountIdentifier = text;
+
 type Balance = nat;
-
-type User = variant {
-    address: text;
-    "principal": principal;
-};
-
-type TransferRequest = record {
-    from: User;
-    to: User;
-    token: TokenIdentifier;
-    amount: Balance;
-    memo: blob;
-    notify: bool;
-};
-
-type TransferResponse = variant {
-    ok: Balance;
-    err: variant {
-        Unauthorized: AccountIdentifier;
-        InsufficientBalance: null;
-        Rejected: null;
-        InvalidToken: TokenIdentifier;
-        CannotNotify: AccountIdentifier;
-        Other: text;
-    };
-};
 
 type BalanceRequest = record {
     user: User;
@@ -35,10 +12,6 @@ type BalanceRequest = record {
 
 type BalanceResponse = variant {
     ok: Balance;
-};
-
-type MetadataResponse = variant {
-    ok: Metadata;
     err: CommonError;
 };
 
@@ -47,24 +20,74 @@ type CommonError = variant {
     Other: text;
 };
 
-type Extensions = vec text;
+type Extension = text;
+type Extensions = vec Extension;
+
+type FungibleMetadata = record {
+    name: text;
+    symbol: text;
+    decimals: nat8;
+    metadata: opt blob;
+};
+
+type Memo = blob;
 
 type Metadata = variant {
-    fungible: record {
-        name: text;
-        symbol: text;
-        decimals: nat8;
-        metadata: opt blob;
-    };
-    nonfungible: record {
-        metadata: opt blob;
-    };
+    fungible: FungibleMetadata;
+    nonfungible: NonFungibleMetadata;
+};
+
+type MetadataResponse = variant {
+    ok: Metadata;
+    err: CommonError;
+};
+
+type NonFungibleMetadata = record {
+    metadata: opt blob;
+};
+
+type SupplyResponse = variant {
+    ok: Balance;
+    err: CommonError;
+};
+
+type TokenIdentifier = text;
+
+type TransferRequest = record {
+    from: User;
+    to: User;
+    token: TokenIdentifier;
+    amount: Balance;
+    memo: Memo;
+    notify: bool;
+};
+
+type TransferResponse = variant {
+    ok: Balance;
+    err: TransferResponseError;
+};
+
+type TransferResponseError = variant {
+    Unauthorized: AccountIdentifier;
+    InsufficientBalance: null;
+    Rejected: null;
+    InvalidToken: TokenIdentifier;
+    CannotNotify: AccountIdentifier;
+    Other: text;
+};
+
+type User = variant {
+    address: text;
+    "principal": principal;
 };
 
 service : {
     "init": () -> (bool);
-    "transfer": (TransferRequest) -> (TransferResponse);
     "balance": (BalanceRequest) -> (BalanceResponse) query;
-    "metadata": (TokenIdentifier) -> (MetadataResponse) query;
+    "claim": () -> (bool);
     "extensions": () -> (Extensions) query;
+    "metadata": (TokenIdentifier) -> (MetadataResponse) query;
+    "registry": () -> (Accounts) query;
+    "supply": (TokenIdentifier) -> (SupplyResponse) query;
+    "transfer": (TransferRequest) -> (TransferResponse);
 }

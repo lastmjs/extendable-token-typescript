@@ -7,6 +7,10 @@
             "js": "canisters/jsonic/jsonic.ts",
             "candid": "canisters/jsonic/jsonic.did",
             "wasm": "target/wasm32-unknown-unknown/release/jsonic-optimized.wasm"
+        },
+        "faucet": {
+            "type": "assets",
+            "source": ["canisters/faucet/build"]
         }
     }
 }
