@@ -189,14 +189,25 @@ class JSONICApp extends HTMLElement {
                     </div>
 
                     <div class="claim-text">
-                        JSONIC is the first <a href="https://github.com/Toniq-Labs/extendable-token" target="_blank">EXT token</a> written in TypeScript/JavaScript and deployed to the Internet Computer.
-                        Anyone can claim tokens at any time, and there is no supply cap.
-                        The original code can be found in <a href="https://github.com/lastmjs/extendable-token-typescript" target="_blank">this repository</a>.
-                        The controller for JSONIC and this frontend have both been set to aaaa-aa, and thus JSONIC is essentially autonomous and can only practically be updated through an NNS proposal.
-                        The canister id for JSONIC is: nmgdh-xqaaa-aaaae-qaauq-cai
-                        The canister id for this frontend is: nceop-maaaa-aaaae-qaavq-cai
-                        If the two canisters run out of cycles, eventually they'll be deleted by the Internet Computer.
-                        Anyone can send cycles to these canisters to keep them up and running.
+                        <p>
+                            JSONIC is the first <a href="https://github.com/Toniq-Labs/extendable-token" target="_blank">EXT token</a> written in TypeScript/JavaScript and deployed to the <a href="https://dfinity.org/" target="_blank">Internet Computer</a>.
+                            The original code can be found in <a href="https://github.com/lastmjs/extendable-token-typescript" target="_blank">this repository</a>.
+                        </p>
+
+                        <p>
+                            Anyone can claim tokens at any time, and there is no supply cap.
+                        </p>
+                        
+                        <p>
+                            The controllers for JSONIC and this frontend have both been set to a <a href="https://github.com/ninegua/ic-blackhole" target="_blank">black hole address</a>.
+                            This essentially means they are autonomous and can only be practically updated through NNS proposals.
+                        </p>
+                        
+                        <p>
+                            JSONIC canister id: nmgdh-xqaaa-aaaae-qaauq-cai
+                            <br>
+                            Faucet canister id: nceop-maaaa-aaaae-qaavq-cai
+                        </p>
                     </div>
                 </div>
     
