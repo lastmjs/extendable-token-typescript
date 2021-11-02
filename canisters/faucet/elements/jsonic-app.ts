@@ -191,7 +191,7 @@ class JSONICApp extends HTMLElement {
                     <div class="claim-text">
                         <p>
                             JSONIC is the first <a href="https://github.com/Toniq-Labs/extendable-token" target="_blank">EXT token</a> written in TypeScript/JavaScript and deployed to the <a href="https://dfinity.org/" target="_blank">Internet Computer</a>.
-                            The original code can be found in <a href="https://github.com/lastmjs/extendable-token-typescript" target="_blank">this repository</a>.
+                            The original code can be found in <a href="https://github.com/lastmjs/extendable-token-typescript/blob/main/canisters/jsonic/jsonic.ts" target="_blank">this repository</a>.
                         </p>
 
                         <p>
