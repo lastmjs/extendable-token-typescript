@@ -2,7 +2,7 @@
     "canisters": {
         "jsonic": {
             "type": "custom",
-            "build": "azle jsonic",
+            "build": "node_modules/.bin/azle jsonic",
             "root": "canisters/jsonic",
             "js": "canisters/jsonic/jsonic.ts",
             "candid": "canisters/jsonic/jsonic.did",

@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/lastmjs/extendable-token-typescript/issues"
   },
-  "homepage": "https://github.com/lastmjs/extendable-token-typescript#readme"
+  "homepage": "https://github.com/lastmjs/extendable-token-typescript#readme",
+  "dependencies": {
+    "azle": "0.0.2"
+  }
 }
