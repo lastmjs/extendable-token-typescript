@@ -17,6 +17,6 @@
   },
   "homepage": "https://github.com/lastmjs/extendable-token-typescript#readme",
   "dependencies": {
-    "azle": "0.0.2"
+    "azle": "0.0.3"
   }
 }

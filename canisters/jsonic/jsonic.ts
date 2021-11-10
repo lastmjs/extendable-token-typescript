@@ -14,14 +14,6 @@ import {
 
 declare var ic: {
     caller: Principal;
-    memory: {
-        balances: {
-            [key: AccountIdentifier]: Balance | undefined;
-        };
-        extensions: Extension[];
-        initialized: boolean;
-        supply: Balance;
-    };
 };
 
 type Account = Candid<[AccountIdentifier, Balance]>;
@@ -95,23 +87,24 @@ type User = Candid<Enum<{
     principal?: Principal
 }>>;
 
-export function init(): Update<boolean> {
-    if (ic.memory.initialized === true) {
-        return false;
-    }
+type State = {
+    balances: {
+        [key: AccountIdentifier]: Balance | undefined;
+    };
+    extensions: Extension[];
+    supply: Balance;
+};
 
-    ic.memory.initialized = true;
-    ic.memory.balances = {};
-    ic.memory.supply = 0;
-    ic.memory.extensions = ['@ext/common'];
-
-    return true;
-}
+let state: State = {
+    balances: {},
+    extensions: ['@ext/common'],
+    supply: 0
+};
 
 export function balance(request: BalanceRequest): Query<BalanceResponse> {
     const aid = getUserAID(request.user);
 
-    const balance = ic.memory.balances[aid];
+    const balance = state.balances[aid];
 
     if (balance === undefined) {
         return {
@@ -127,19 +120,19 @@ export function balance(request: BalanceRequest): Query<BalanceResponse> {
 export function claim(): Update<boolean> {
     const callerAddress = addressFromPrincipal(ic.caller);
 
-    const balance = ic.memory.balances[callerAddress] ?? 0;
+    const callerBalance = state.balances[callerAddress] ?? 0;
 
-    ic.memory.balances[callerAddress] = balance + 100000000;
+    state.balances[callerAddress] = callerBalance + 100000000;
     
-    const supply = ic.memory.supply;
+    const totalSupply = state.supply;
 
-    ic.memory.supply = supply + 100000000;
+    state.supply = totalSupply + 100000000;
 
     return true;
 }
 
 export function extensions(): Query<Extensions> {
-    return ic.memory.extensions;
+    return state.extensions;
 }
 
 export function metadata(token: TokenIdentifier): Query<MetadataResponse> {
@@ -155,12 +148,12 @@ export function metadata(token: TokenIdentifier): Query<MetadataResponse> {
 }
 
 export function registry(): Query<Accounts> {
-    return Object.entries(ic.memory.balances);
+    return Object.entries(state.balances);
 }
 
 export function supply(token: TokenIdentifier): Query<SupplyResponse> {
     return {
-        ok: ic.memory.supply
+        ok: state.supply
     };
 }
 
@@ -177,7 +170,7 @@ export function transfer(request: TransferRequest): Update<TransferResponse> {
         };
     }
 
-    const senderBalance = ic.memory.balances[sender];
+    const senderBalance = state.balances[sender];
 
     if (
         senderBalance === undefined ||
@@ -192,12 +185,12 @@ export function transfer(request: TransferRequest): Update<TransferResponse> {
 
     const newSenderBalance = senderBalance - request.amount;
 
-    ic.memory.balances[sender] = newSenderBalance;
+    state.balances[sender] = newSenderBalance;
 
-    const receiverBalance = ic.memory.balances[receiver] ?? 0;
+    const receiverBalance = state.balances[receiver] ?? 0;
     const newReceiverBalance = receiverBalance + request.amount;
 
-    ic.memory.balances[receiver] = newReceiverBalance;
+    state.balances[receiver] = newReceiverBalance;
 
     return {
         ok: request.amount
